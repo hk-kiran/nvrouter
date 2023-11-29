@@ -1,0 +1,27 @@
+# Compiled object files
+*.o
+*.cu.o
+*.ptx
+
+# Compiled executables
+*.exe
+*.out
+
+# CUDA build directories
+build/
+
+# CUDA generated files
+cuda-gdb/
+
+# CUDA dependency files
+.depend
+
+# CUDA profiling files
+nvvp/
+
+# CUDA generated code
+generated/
+
+# CUDA cache files
+*.nvvp
+*.nvprof
