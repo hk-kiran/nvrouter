@@ -1,8 +1,11 @@
 #include "kernel.cu"
+#include "types.cu"
 
 int main() {
-    generateIPv4PacketsKernel(1000, false);
-    generateIPv6PacketsKernel(1000, false);
-    generateIPv4PacketsKernel(1000, false);
-    return 0;
+  // Add semicolon
+  GlobalPacketData globalPacketData;
+  generateIPv4PacketsKernel(1000, false, globalPacketData);
+  generateIPv6PacketsKernel(1000, false, globalPacketData);
+  createRoutingTable(globalPacketData);
+  return 0;
 }
