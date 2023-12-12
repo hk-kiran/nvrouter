@@ -42,6 +42,8 @@ __device__ uint32_t randomizeAddress(curandState_t* state) {
     return address;
 }
 
+
+
 __global__ void generateIPv4Packets(IPv4Packet* packets, int numPackets) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     

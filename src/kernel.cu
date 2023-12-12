@@ -1,7 +1,11 @@
 #include "types.cu"
 #include "utils.cu"
+#include <curand_kernel.h>
 
-void generateIPv4PacketsKernel(int numPackets, bool debug) {
+
+
+void generateIPv4PacketsKernel(int numPackets, bool debug,GlobalPacketData& globalPacketData) {
+    
     int blockSize = 256; // Number of threads per block
     int numBlocks = (numPackets + blockSize - 1) / blockSize; // Calculate the number of blocks
     cudaEvent_t start, stop;
@@ -25,11 +29,13 @@ void generateIPv4PacketsKernel(int numPackets, bool debug) {
     printf("Time elapsed to generate %d IPv4 packets : %f milliseconds\n", numPackets, milliseconds);
     // Copy the packets back to the host
     IPv4Packet* h_packets = new IPv4Packet[numPackets];
+    globalPacketData.ipv4Packets = new IPv4Packet[numPackets];
     cudaMemcpy(h_packets, d_packets, numPackets * sizeof(IPv4Packet), cudaMemcpyDeviceToHost);
     
     if (debug) {
         for (int i = 0; i < numPackets; i++) {
             IPv4Packet packet = h_packets[i];
+            globalPacketData.ipv4Packets[i] = h_packets[i];
             // Print the source and destination addresses
             printf("Packet %d: Source Address: %u.%u.%u.%u, Destination Address: %u.%u.%u.%u, Payload: %s\n",
             i, 
@@ -47,7 +53,20 @@ void generateIPv4PacketsKernel(int numPackets, bool debug) {
     delete[] h_packets;
 }
 
-void generateIPv6PacketsKernel(int numPackets, bool debug) {
+void shuffleIPv6(RoutingEntryIPV6 entries[], int n) {
+  for (int i = n - 1; i > 0; --i) {
+    int j = rand() % (i + 1);
+    std::swap(entries[i], entries[j]);
+  }
+}
+
+void shuffle(RoutingEntryIPV4 entries[], int n) {
+  for (int i = n - 1; i > 0; --i) {
+    int j = rand() % (i + 1);
+    std::swap(entries[i], entries[j]);
+  }
+}
+void generateIPv6PacketsKernel(int numPackets, bool debug, GlobalPacketData& globalPacketData) {
     int blockSize = 256; // Number of threads per block
     int numBlocks = (numPackets + blockSize - 1) / blockSize; // Calculate the number of blocks
     cudaEvent_t start, stop;
@@ -72,11 +91,13 @@ void generateIPv6PacketsKernel(int numPackets, bool debug) {
     
     // Copy the IPv6 packets back to the host
     IPv6Packet* h_ipv6Packets = new IPv6Packet[numPackets];
+    globalPacketData.ipv6Packets = new IPv6Packet[numPackets];
     cudaMemcpy(h_ipv6Packets, d_ipv6Packets, numPackets * sizeof(IPv6Packet), cudaMemcpyDeviceToHost);
     
     if (debug) {
         for (int i = 0; i < numPackets; i++) {
             IPv6Packet packet = h_ipv6Packets[i];
+            globalPacketData.ipv6Packets[i] = h_ipv6Packets[i];
             // Print the source and destination addresses
             printf("IPv6 Packet %d: Source Address: ", i);
             for (int j = 0; j < 8; j++) {
@@ -103,3 +124,85 @@ void generateIPv6PacketsKernel(int numPackets, bool debug) {
     // Free the memory for IPv6 packets on the host
     delete[] h_ipv6Packets;
 }
+
+uint32_t generateRandomIPv4AddressHost() {
+  return rand() % 0xFFFFFFFF; // Generate and return a random IPv4 address
+}
+
+uint8_t* generateRandomIPv6AddressHost() {
+  uint8_t* address = new uint8_t[16]; // Allocate memory for the address
+
+
+  for (int i = 0; i < 16; ++i) {
+    address[i] = static_cast<uint8_t>(std::rand() % 256); // Generate a random byte for each octet
+  }
+  return address; // Return the generated address
+}
+void createRoutingTable(GlobalPacketData& globalPacketData, bool debug, int numPackets) {
+  RoutingTableIPv4 routingTableIPv4;
+  RoutingTableIPv6 routingTableIPv6;
+  uint8_t subnetMask[16];
+  for (int i = 0; i < 8; ++i) {
+  subnetMask[i] = 0xFF; // Set all bytes to 0xFF for the network portion
+    }
+  for (int i = 8; i < 16; ++i) {
+      subnetMask[i] = 0;} // Set remaining bytes to 0 for the host portion
+
+  
+  for (int i = 0; i < TABLE_SIZE; ++i) {
+    // Populate IPv4 table
+    if (i < numPackets) {
+      routingTableIPv4.ipv4Entries[i].destinationAddress = globalPacketData.ipv4Packets[i].destinationAddress;
+      
+    } else {
+      routingTableIPv4.ipv4Entries[i].destinationAddress =  generateRandomIPv4AddressHost();
+      
+    }
+    routingTableIPv4.ipv4Entries[i].subnetMask = 0xFFFFFFFF;
+    routingTableIPv4.ipv4Entries[i].interface = i;
+
+    // Populate IPv6 table
+    if (i < numPackets) {
+      memcpy(routingTableIPv6.ipv6Entries[i].destinationAddress,
+       globalPacketData.ipv6Packets[i].destinationAddress, 16);
+    } else {
+      uint8_t* address = generateRandomIPv6AddressHost();
+      memcpy(routingTableIPv6.ipv6Entries[i].destinationAddress, address, 16);
+      delete[] address; // Free allocated memory
+    }
+    memcpy(routingTableIPv6.ipv6Entries[i].subnetMask, subnetMask, 16);
+    routingTableIPv6.ipv6Entries[i].interface = i;
+  }
+
+  // Shuffle entries
+  shuffle(routingTableIPv4.ipv4Entries, TABLE_SIZE);
+  shuffleIPv6(routingTableIPv6.ipv6Entries, TABLE_SIZE);
+ 
+ if(debug){
+  // Print routing tables
+  printf("Routing Table (IPv4):\n");
+  for (int i = 0; i < TABLE_SIZE; ++i) {
+    printf("Entry %d: Destination Address: %u.%u.%u.%u, Interface: %u\n",
+          i,
+          (routingTableIPv4.ipv4Entries[i].destinationAddress >> 24) & 0xFF,
+          (routingTableIPv4.ipv4Entries[i].destinationAddress >> 16) & 0xFF,
+          (routingTableIPv4.ipv4Entries[i].destinationAddress >> 8) & 0xFF,
+          routingTableIPv4.ipv4Entries[i].destinationAddress & 0xFF,
+          routingTableIPv4.ipv4Entries[i].interface);
+  }
+
+ printf("Routing Table (IPv6):\n");
+  for (int i = 0; i < TABLE_SIZE; ++i) {
+    printf("Entry %d: Destination Address: ", i);
+    for (int j = 0; j < 16; ++j) {
+      printf("%02x", routingTableIPv6.ipv6Entries[i].destinationAddress[j]);
+
+
+    }
+    printf(", Subnet Mask: %d", i);
+    for (int j = 0; j < 16; ++j) {
+      printf("%02x", routingTableIPv6.ipv6Entries[i].subnetMask[j]);
+    }
+    printf(", Interface: %u\n", routingTableIPv6.ipv6Entries[i].interface);
+  }}}
+

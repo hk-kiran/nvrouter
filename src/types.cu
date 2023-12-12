@@ -2,6 +2,42 @@
 #include <cstdint>
 #include <stdio.h>
 
+#ifndef ROUTINGENTRYIPV4
+#define ROUTINGENTRYIPV4
+struct RoutingEntryIPV4 {
+    uint32_t destinationAddress;
+    uint32_t subnetMask;
+    uint32_t interface;
+};
+#endif
+
+#ifndef ROUTINGENTRYIPV6
+#define ROUTINGENTRYIPV6
+struct RoutingEntryIPV6 {
+  uint8_t destinationAddress[16]; // IPv6 address
+  uint8_t subnetMask[16]; // IPv6 subnet mask
+  int interface; // Interface number
+};
+#endif
+
+
+#ifndef ROUTINGTABLEIPV4
+#define ROUTINGTABLEIPV4
+const int TABLE_SIZE = 10;
+struct RoutingTableIPv4 {
+  RoutingEntryIPV4 ipv4Entries[TABLE_SIZE];
+};
+#endif
+
+#ifndef ROUTINGTABLEIPV6
+#define ROUTINGTABLEIPV6
+struct RoutingTableIPv6 {
+  RoutingEntryIPV6 ipv6Entries[TABLE_SIZE]; // Store 16 bytes for each IPv6 address
+};
+#endif
+
+
+
 #ifndef IPV4_PACKET_H
 #define IPV4_PACKET_H
 
@@ -37,4 +73,11 @@ struct IPv6Packet {
     uint8_t payload[1500]; // Maximum payload size of 1500 bytes
 };
 
-#endif // IPV6_PACKET_H
+#endif 
+#ifndef GLOBALPACKETDATA
+#define GLOBALPACKETDATA
+struct GlobalPacketData {
+    IPv4Packet* ipv4Packets;
+    IPv6Packet* ipv6Packets;
+};
+#endif// IPV6_PACKET_H
