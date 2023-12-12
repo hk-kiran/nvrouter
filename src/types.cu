@@ -2,6 +2,9 @@
 #include <cstdint>
 #include <stdio.h>
 
+#ifndef IPV4_PACKET_H
+#define IPV4_PACKET_H
+
 struct IPv4Packet {
     uint8_t version;
     uint8_t headerLength;
@@ -16,3 +19,5 @@ struct IPv4Packet {
     uint32_t destinationAddress;
     uint8_t payload[1500]; // Maximum payload size of 1500 bytes
 };
+
+#endif // IPV4_PACKET_H
