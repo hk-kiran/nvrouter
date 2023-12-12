@@ -2,7 +2,7 @@
 #include "utils.cu"
 
 void generateIPv4PacketsKernel() {
-    int numPackets = 1000; // Number of packets to generate
+    int numPackets = 2; // Number of packets to generate
     int blockSize = 256; // Number of threads per block
     int numBlocks = (numPackets + blockSize - 1) / blockSize; // Calculate the number of blocks
     
@@ -39,7 +39,7 @@ void generateIPv4PacketsKernel() {
 }
 
 void generateIPv6PacketsKernel() {
-    int numPackets = 1000; // Number of packets to generate
+    int numPackets = 2; // Number of packets to generate
     int blockSize = 256; // Number of threads per block
     int numBlocks = (numPackets + blockSize - 1) / blockSize; // Calculate the number of blocks
     
@@ -60,13 +60,21 @@ void generateIPv6PacketsKernel() {
     for (int i = 0; i < numPackets; i++) {
         IPv6Packet packet = h_ipv6Packets[i];
         // Print the source and destination addresses
-        printf("IPv6 Packet %d: Source Address: %x:%x:%x:%x:%x:%x:%x:%x, Destination Address: %x:%x:%x:%x:%x:%x:%x:%x, Payload: %s\n",
-        i, 
-        (packet.sourceAddress >> 112) & 0xFFFF, (packet.sourceAddress >> 96) & 0xFFFF, (packet.sourceAddress >> 80) & 0xFFFF, (packet.sourceAddress >> 64) & 0xFFFF,
-        (packet.sourceAddress >> 48) & 0xFFFF, (packet.sourceAddress >> 32) & 0xFFFF, (packet.sourceAddress >> 16) & 0xFFFF, packet.sourceAddress & 0xFFFF,
-        (packet.destinationAddress >> 112) & 0xFFFF, (packet.destinationAddress >> 96) & 0xFFFF, (packet.destinationAddress >> 80) & 0xFFFF, (packet.destinationAddress >> 64) & 0xFFFF,
-        (packet.destinationAddress >> 48) & 0xFFFF, (packet.destinationAddress >> 32) & 0xFFFF, (packet.destinationAddress >> 16) & 0xFFFF, packet.destinationAddress & 0xFFFF,
-        packet.payload);
+        printf("IPv6 Packet %d: Source Address: ", i);
+        for (int j = 0; j < 8; j++) {
+            printf("%02x", packet.sourceAddress[j]);
+            if (j < 7) {
+                printf(":");
+            }
+        }
+        printf(", Destination Address: ");
+        for (int j = 0; j < 8; j++) {
+            printf("%02x", packet.destinationAddress[j]);
+            if (j < 7) {
+                printf(":");
+            }
+        }
+        printf(", Payload: %s\n", packet.payload);
     }
 
     

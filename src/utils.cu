@@ -27,7 +27,7 @@ __device__ IPv4Packet buildIPv4PacketWithPayload(uint32_t sourceAddress, uint32_
     packet.destinationAddress = destinationAddress;
     
     // Set the payload data
-    const char* payloadData = "Dummy payload data";
+    const char* payloadData = "Dummy IPv4 payload data";
     memcpy(packet.payload, payloadData, deviceStrlen(payloadData));
     
     return packet;
@@ -71,13 +71,11 @@ __device__ IPv6Packet buildIPv6PacketWithPayload(uint8_t* sourceAddress, uint8_t
     memcpy(packet.destinationAddress, destinationAddress, sizeof(packet.destinationAddress));
     
     // Set the payload data
-    const char* payloadData = "Dummy payload data";
+    const char* payloadData = "Dummy IPv6 payload data";
     memcpy(packet.payload, payloadData, deviceStrlen(payloadData));
     
     return packet;
 }
-
-// ...
 
 __device__ uint8_t* randomizeIPv6Address(curandState_t* state) {
     uint8_t* address = new uint8_t[16];

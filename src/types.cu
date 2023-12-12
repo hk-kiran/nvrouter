@@ -32,8 +32,8 @@ struct IPv6Packet {
     uint16_t payloadLength;
     uint8_t nextHeader;
     uint8_t hopLimit;
-    uint8_t sourceAddress[16];
-    uint8_t destinationAddress[16];
+    uint16_t sourceAddress[8];
+    uint16_t destinationAddress[8];
     uint8_t payload[1500]; // Maximum payload size of 1500 bytes
 };
 
