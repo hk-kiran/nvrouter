@@ -13,7 +13,7 @@ __device__ int deviceStrlen(const char* str) {
 __device__ IPv4Packet buildIPv4PacketWithPayload(uint32_t sourceAddress, uint32_t destinationAddress) {
     IPv4Packet packet;
     
-    // Set the values of the packet fields
+    // Set some dummy values of the packet fields
     packet.version = 4;
     packet.headerLength = 5; // 5 * 32-bit words
     packet.typeOfService = 0;

@@ -23,11 +23,11 @@ void generatePacketsKernel() {
     for (int i = 0; i < numPackets; i++) {
         IPv4Packet packet = h_packets[i];
         // Print the source and destination addresses
-        printf("Packet %d: Source Address: %u.%u.%u.%u, Destination Address: %u.%u.%u.%u\n", 
-               i, 
-               (packet.sourceAddress >> 24) & 0xFF, (packet.sourceAddress >> 16) & 0xFF, (packet.sourceAddress >> 8) & 0xFF, packet.sourceAddress & 0xFF,
-               (packet.destinationAddress >> 24) & 0xFF, (packet.destinationAddress >> 16) & 0xFF, (packet.destinationAddress >> 8) & 0xFF, packet.destinationAddress & 0xFF);
-
+        printf("Packet %d: Source Address: %u.%u.%u.%u, Destination Address: %u.%u.%u.%u, Payload: %s\n",
+        i, 
+        (packet.sourceAddress >> 24) & 0xFF, (packet.sourceAddress >> 16) & 0xFF, (packet.sourceAddress >> 8) & 0xFF, packet.sourceAddress & 0xFF,
+        (packet.destinationAddress >> 24) & 0xFF, (packet.destinationAddress >> 16) & 0xFF, (packet.destinationAddress >> 8) & 0xFF, packet.destinationAddress & 0xFF, 
+        packet.payload);
     }
 
     
