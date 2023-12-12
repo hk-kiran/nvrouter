@@ -42,7 +42,7 @@ __device__ uint32_t randomizeAddress(curandState_t* state) {
     return address;
 }
 
-__global__ void generatePackets(IPv4Packet* packets, int numPackets) {
+__global__ void generateIPv4Packets(IPv4Packet* packets, int numPackets) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     
     if (idx < numPackets) {
@@ -53,5 +53,53 @@ __global__ void generatePackets(IPv4Packet* packets, int numPackets) {
         uint32_t destinationAddress = randomizeAddress(&state); // Generate random destination address
         
         packets[idx] = buildIPv4PacketWithPayload(sourceAddress, destinationAddress);
+    }
+}
+
+// Function to build an IPv6 packet with payload
+__device__ IPv6Packet buildIPv6PacketWithPayload(uint8_t* sourceAddress, uint8_t* destinationAddress) {
+    IPv6Packet packet;
+    
+    // Set some dummy values of the packet fields
+    packet.version = 6;
+    packet.trafficClass = 0;
+    packet.flowLabel = 0;
+    packet.payloadLength = sizeof(IPv6Packet);
+    packet.nextHeader = 6; // TCP
+    packet.hopLimit = 64;
+    memcpy(packet.sourceAddress, sourceAddress, sizeof(packet.sourceAddress));
+    memcpy(packet.destinationAddress, destinationAddress, sizeof(packet.destinationAddress));
+    
+    // Set the payload data
+    const char* payloadData = "Dummy payload data";
+    memcpy(packet.payload, payloadData, deviceStrlen(payloadData));
+    
+    return packet;
+}
+
+// ...
+
+__device__ uint8_t* randomizeIPv6Address(curandState_t* state) {
+    uint8_t* address = new uint8_t[16];
+    for (int i = 0; i < 16; i++) {
+        address[i] = curand(state) % 256;
+    }
+    return address;
+}
+
+__global__ void generateIPv6Packets(IPv6Packet* packets, int numPackets) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    
+    if (idx < numPackets) {
+        curandState_t state;
+        curand_init(clock64(), idx, 0, &state); // Initialize random number generator
+        
+        uint8_t* sourceAddress = randomizeIPv6Address(&state); // Generate random source address
+        uint8_t* destinationAddress = randomizeIPv6Address(&state); // Generate random destination address
+        
+        packets[idx] = buildIPv6PacketWithPayload(sourceAddress, destinationAddress);
+        
+        delete[] sourceAddress;
+        delete[] destinationAddress;
     }
 }

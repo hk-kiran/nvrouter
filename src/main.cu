@@ -1,6 +1,6 @@
 #include "kernel.cu"
 
 int main() {
-    generatePacketsKernel();
+    generateIPv4PacketsKernel();
     return 0;
 }

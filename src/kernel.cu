@@ -1,7 +1,7 @@
 #include "types.cu"
 #include "utils.cu"
 
-void generatePacketsKernel() {
+void generateIPv4PacketsKernel() {
     int numPackets = 1000; // Number of packets to generate
     int blockSize = 256; // Number of threads per block
     int numBlocks = (numPackets + blockSize - 1) / blockSize; // Calculate the number of blocks
@@ -11,7 +11,7 @@ void generatePacketsKernel() {
     cudaMalloc((void**)&d_packets, numPackets * sizeof(IPv4Packet));
     
     // Call the utils kernel function
-    generatePackets<<<numBlocks, blockSize>>>(d_packets, numPackets);
+    generateIPv4Packets<<<numBlocks, blockSize>>>(d_packets, numPackets);
     
     // Wait for the kernel to finish
     cudaDeviceSynchronize();
@@ -36,4 +36,43 @@ void generatePacketsKernel() {
     
     // Free the memory on the host
     delete[] h_packets;
+}
+
+void generateIPv6PacketsKernel() {
+    int numPackets = 1000; // Number of packets to generate
+    int blockSize = 256; // Number of threads per block
+    int numBlocks = (numPackets + blockSize - 1) / blockSize; // Calculate the number of blocks
+    
+    // Allocate memory for the IPv6 packets on the GPU
+    IPv6Packet* d_ipv6Packets;
+    cudaMalloc((void**)&d_ipv6Packets, numPackets * sizeof(IPv6Packet));
+    
+    // Call the utils kernel function to generate IPv6 packets
+    generateIPv6Packets<<<numBlocks, blockSize>>>(d_ipv6Packets, numPackets);
+    
+    // Wait for the kernel to finish
+    cudaDeviceSynchronize();
+    
+    // Copy the IPv6 packets back to the host
+    IPv6Packet* h_ipv6Packets = new IPv6Packet[numPackets];
+    cudaMemcpy(h_ipv6Packets, d_ipv6Packets, numPackets * sizeof(IPv6Packet), cudaMemcpyDeviceToHost);
+    
+    for (int i = 0; i < numPackets; i++) {
+        IPv6Packet packet = h_ipv6Packets[i];
+        // Print the source and destination addresses
+        printf("IPv6 Packet %d: Source Address: %x:%x:%x:%x:%x:%x:%x:%x, Destination Address: %x:%x:%x:%x:%x:%x:%x:%x, Payload: %s\n",
+        i, 
+        (packet.sourceAddress >> 112) & 0xFFFF, (packet.sourceAddress >> 96) & 0xFFFF, (packet.sourceAddress >> 80) & 0xFFFF, (packet.sourceAddress >> 64) & 0xFFFF,
+        (packet.sourceAddress >> 48) & 0xFFFF, (packet.sourceAddress >> 32) & 0xFFFF, (packet.sourceAddress >> 16) & 0xFFFF, packet.sourceAddress & 0xFFFF,
+        (packet.destinationAddress >> 112) & 0xFFFF, (packet.destinationAddress >> 96) & 0xFFFF, (packet.destinationAddress >> 80) & 0xFFFF, (packet.destinationAddress >> 64) & 0xFFFF,
+        (packet.destinationAddress >> 48) & 0xFFFF, (packet.destinationAddress >> 32) & 0xFFFF, (packet.destinationAddress >> 16) & 0xFFFF, packet.destinationAddress & 0xFFFF,
+        packet.payload);
+    }
+
+    
+    // Free the memory for IPv6 packets on the GPU
+    cudaFree(d_ipv6Packets);
+    
+    // Free the memory for IPv6 packets on the host
+    delete[] h_ipv6Packets;
 }

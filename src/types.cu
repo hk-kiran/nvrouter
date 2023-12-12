@@ -21,3 +21,20 @@ struct IPv4Packet {
 };
 
 #endif // IPV4_PACKET_H
+
+#ifndef IPV6_PACKET_H
+#define IPV6_PACKET_H
+
+struct IPv6Packet {
+    uint32_t version : 4;
+    uint32_t trafficClass : 8;
+    uint32_t flowLabel : 20;
+    uint16_t payloadLength;
+    uint8_t nextHeader;
+    uint8_t hopLimit;
+    uint8_t sourceAddress[16];
+    uint8_t destinationAddress[16];
+    uint8_t payload[1500]; // Maximum payload size of 1500 bytes
+};
+
+#endif // IPV6_PACKET_H
