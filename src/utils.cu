@@ -1,25 +1,16 @@
-#include <cstdint>
-#include <cstring>
-#include <curand.h>
+#include <curand_kernel.h>
+#include "types.cu"
 
-struct IPv4Packet {
-    uint8_t version;
-    uint8_t headerLength;
-    uint8_t typeOfService;
-    uint16_t totalLength;
-    uint16_t identification;
-    uint16_t flagsAndFragmentOffset;
-    uint8_t timeToLive;
-    uint8_t protocol;
-    uint16_t headerChecksum;
-    uint32_t sourceAddress;
-    uint32_t destinationAddress;
-    uint8_t payload[1500]; // Maximum payload size of 1500 bytes
-    // Add more fields as needed
-};
+__device__ int deviceStrlen(const char* str) {
+    int len = 0;
+    while(str[len] != '\0') {
+        len++;
+    }
+    return len;
+}
 
 // Function to build an IPv4 packet with payload
-__global__ IPv4Packet buildIPv4PacketWithPayload(uint32_t sourceAddress, uint32_t destinationAddress) {
+__device__ IPv4Packet buildIPv4PacketWithPayload(uint32_t sourceAddress, uint32_t destinationAddress) {
     IPv4Packet packet;
     
     // Set the values of the packet fields
@@ -37,7 +28,7 @@ __global__ IPv4Packet buildIPv4PacketWithPayload(uint32_t sourceAddress, uint32_
     
     // Set the payload data
     const char* payloadData = "Dummy payload data";
-    std::memcpy(packet.payload, payloadData, strlen(payloadData));
+    memcpy(packet.payload, payloadData, deviceStrlen(payloadData));
     
     return packet;
 }
@@ -46,7 +37,7 @@ __global__ IPv4Packet buildIPv4PacketWithPayload(uint32_t sourceAddress, uint32_
 __device__ uint32_t randomizeAddress(curandState_t* state) {
     uint32_t address = 0;
     for (int i = 0; i < 4; i++) {
-        address |= (curand(state) % 256) << (i * 8); // Generate random byte and shift it to the appropriate position
+        address |= (curand(state) % 256) << (i * 8); 
     }
     return address;
 }
