@@ -140,9 +140,7 @@ uint8_t* generateRandomIPv6AddressHost() {
   }
   return address; // Return the generated address
 }
-void createRoutingTable(GlobalPacketData& globalPacketData, bool debug, int numPackets) {
-  RoutingTableIPv4 routingTableIPv4;
-  RoutingTableIPv6 routingTableIPv6;
+void createRoutingTable(GlobalPacketData& globalPacketData, bool debug, int numPackets, RoutingTableIPv4& routingTableIPv4, RoutingTableIPv6& routingTableIPv6) {
   uint8_t subnetMask[16];
   for (int i = 0; i < 8; ++i) {
   subnetMask[i] = 0xFF; // Set all bytes to 0xFF for the network portion
@@ -198,18 +196,20 @@ void createRoutingTable(GlobalPacketData& globalPacketData, bool debug, int numP
           );
   }
 
- printf("Routing Table (IPv6):\n");
-  for (int i = 0; i < TABLE_SIZE; ++i) {
-    printf("Entry %d: Destination Address: ", i);
-    for (int j = 0; j < 16; ++j) {
-      printf("%02x", routingTableIPv6.ipv6Entries[i].destinationAddress[j]);
+  printf("Routing Table (IPv6):\n");
+    for (int i = 0; i < TABLE_SIZE; ++i) {
+      printf("Entry %d: Destination Address: ", i);
+      for (int j = 0; j < 16; ++j) {
+        printf("%02x", routingTableIPv6.ipv6Entries[i].destinationAddress[j]);
 
 
+      }
+      printf(", Subnet Mask: %d", i);
+      for (int j = 0; j < 16; ++j) {
+        printf("%02x", routingTableIPv6.ipv6Entries[i].subnetMask[j]);
+      }
+      printf(", Interface: %u\n", routingTableIPv6.ipv6Entries[i].interface);
     }
-    printf(", Subnet Mask: %d", i);
-    for (int j = 0; j < 16; ++j) {
-      printf("%02x", routingTableIPv6.ipv6Entries[i].subnetMask[j]);
-    }
-    printf(", Interface: %u\n", routingTableIPv6.ipv6Entries[i].interface);
-  }}}
+  }
+}
 
