@@ -2,7 +2,6 @@
 #include "types.cu"
 
 int main() {
-  // Add semicolon
   GlobalPacketData globalPacketData;
   generateIPv4PacketsKernel(10, false, globalPacketData);
   generateIPv6PacketsKernel(10, false, globalPacketData);

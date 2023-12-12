@@ -31,11 +31,12 @@ void generateIPv4PacketsKernel(int numPackets, bool debug,GlobalPacketData& glob
     IPv4Packet* h_packets = new IPv4Packet[numPackets];
     globalPacketData.ipv4Packets = new IPv4Packet[numPackets];
     cudaMemcpy(h_packets, d_packets, numPackets * sizeof(IPv4Packet), cudaMemcpyDeviceToHost);
-    
+    for (int i = 0; i < numPackets; i++) {
+      globalPacketData.ipv4Packets[i] = h_packets[i];
+    }
     if (debug) {
         for (int i = 0; i < numPackets; i++) {
             IPv4Packet packet = h_packets[i];
-            globalPacketData.ipv4Packets[i] = h_packets[i];
             // Print the source and destination addresses
             printf("Packet %d: Source Address: %u.%u.%u.%u, Destination Address: %u.%u.%u.%u, Payload: %s\n",
             i, 
@@ -93,11 +94,12 @@ void generateIPv6PacketsKernel(int numPackets, bool debug, GlobalPacketData& glo
     IPv6Packet* h_ipv6Packets = new IPv6Packet[numPackets];
     globalPacketData.ipv6Packets = new IPv6Packet[numPackets];
     cudaMemcpy(h_ipv6Packets, d_ipv6Packets, numPackets * sizeof(IPv6Packet), cudaMemcpyDeviceToHost);
-    
+    for (int i = 0; i < numPackets; i++) {
+      globalPacketData.ipv6Packets[i] = h_ipv6Packets[i];
+    }
     if (debug) {
         for (int i = 0; i < numPackets; i++) {
             IPv6Packet packet = h_ipv6Packets[i];
-            globalPacketData.ipv6Packets[i] = h_ipv6Packets[i];
             // Print the source and destination addresses
             printf("IPv6 Packet %d: Source Address: ", i);
             for (int j = 0; j < 8; j++) {
@@ -182,13 +184,18 @@ void createRoutingTable(GlobalPacketData& globalPacketData, bool debug, int numP
   // Print routing tables
   printf("Routing Table (IPv4):\n");
   for (int i = 0; i < TABLE_SIZE; ++i) {
-    printf("Entry %d: Destination Address: %u.%u.%u.%u, Interface: %u\n",
+    printf("Entry %d: Destination Address: %u.%u.%u.%u, Subnet Mask: %u.%u.%u.%u, Interface: %u\n",
           i,
           (routingTableIPv4.ipv4Entries[i].destinationAddress >> 24) & 0xFF,
           (routingTableIPv4.ipv4Entries[i].destinationAddress >> 16) & 0xFF,
           (routingTableIPv4.ipv4Entries[i].destinationAddress >> 8) & 0xFF,
           routingTableIPv4.ipv4Entries[i].destinationAddress & 0xFF,
-          routingTableIPv4.ipv4Entries[i].interface);
+          (routingTableIPv4.ipv4Entries[i].subnetMask >> 24) & 0xFF,
+          (routingTableIPv4.ipv4Entries[i].subnetMask >> 16) & 0xFF,
+          (routingTableIPv4.ipv4Entries[i].subnetMask >> 8) & 0xFF,
+          routingTableIPv4.ipv4Entries[i].subnetMask & 0xFF,
+          routingTableIPv4.ipv4Entries[i].interface
+          );
   }
 
  printf("Routing Table (IPv6):\n");
