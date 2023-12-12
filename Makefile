@@ -7,7 +7,7 @@ SRC_DIR := src
 BIN_DIR := bin
 
 # Source files
-SRCS := $(wildcard $(SRC_DIR)/main.cu)
+SRCS := $(wildcard $(SRC_DIR)/*.cu)
 
 # Target executable
 TARGET := $(BIN_DIR)/nvrouter
@@ -18,7 +18,7 @@ all: $(TARGET)
 # Rule to compile and link the target executable
 $(TARGET): $(SRCS)
 	@mkdir -p $(BIN_DIR)
-	$(NVCC) $(CFLAGS) $^ -o $@
+	$(NVCC) $(CFLAGS) $(SRC_DIR)/main.cu -o $@
 
 # Clean build artifacts
 clean:
