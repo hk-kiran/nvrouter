@@ -25,3 +25,6 @@ generated/
 # CUDA cache files
 *.nvvp
 *.nvprof
+
+# generated binaries
+bin/
