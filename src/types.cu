@@ -77,7 +77,7 @@ struct IPv6Packet {
 #ifndef GLOBALPACKETDATA
 #define GLOBALPACKETDATA
 struct GlobalPacketData {
-    IPv4Packet ipv4Packets[2];
-    IPv6Packet ipv6Packets[2];
+    IPv4Packet* ipv4Packets;
+    IPv6Packet* ipv6Packets;
 };
 #endif// IPV6_PACKET_H

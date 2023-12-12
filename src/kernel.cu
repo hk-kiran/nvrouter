@@ -29,11 +29,13 @@ void generateIPv4PacketsKernel(int numPackets, bool debug,GlobalPacketData& glob
     printf("Time elapsed to generate %d IPv4 packets : %f milliseconds\n", numPackets, milliseconds);
     // Copy the packets back to the host
     IPv4Packet* h_packets = new IPv4Packet[numPackets];
+    globalPacketData.ipv4Packets = new IPv4Packet[numPackets];
     cudaMemcpy(h_packets, d_packets, numPackets * sizeof(IPv4Packet), cudaMemcpyDeviceToHost);
     
     if (debug) {
         for (int i = 0; i < numPackets; i++) {
             IPv4Packet packet = h_packets[i];
+            globalPacketData.ipv4Packets[i] = h_packets[i];
             // Print the source and destination addresses
             printf("Packet %d: Source Address: %u.%u.%u.%u, Destination Address: %u.%u.%u.%u, Payload: %s\n",
             i, 
@@ -50,14 +52,13 @@ void generateIPv4PacketsKernel(int numPackets, bool debug,GlobalPacketData& glob
     // Free the memory on the host
     delete[] h_packets;
 }
-// uint8_t* randomizeIPv6Address(uint8_t* address) {
-//     curandState_t state;
-//   for (int i = 0; i < 16; i++) {
-//     address[i] = curand(state) % 256;
-//   }
-//   return address;
-// }
 
+void shuffleIPv6(RoutingEntryIPV6 entries[], int n) {
+  for (int i = n - 1; i > 0; --i) {
+    int j = rand() % (i + 1);
+    std::swap(entries[i], entries[j]);
+  }
+}
 
 void shuffle(RoutingEntryIPV4 entries[], int n) {
   for (int i = n - 1; i > 0; --i) {
@@ -90,11 +91,13 @@ void generateIPv6PacketsKernel(int numPackets, bool debug, GlobalPacketData& glo
     
     // Copy the IPv6 packets back to the host
     IPv6Packet* h_ipv6Packets = new IPv6Packet[numPackets];
+    globalPacketData.ipv6Packets = new IPv6Packet[numPackets];
     cudaMemcpy(h_ipv6Packets, d_ipv6Packets, numPackets * sizeof(IPv6Packet), cudaMemcpyDeviceToHost);
     
     if (debug) {
         for (int i = 0; i < numPackets; i++) {
             IPv6Packet packet = h_ipv6Packets[i];
+            globalPacketData.ipv6Packets[i] = h_ipv6Packets[i];
             // Print the source and destination addresses
             printf("IPv6 Packet %d: Source Address: ", i);
             for (int j = 0; j < 8; j++) {
@@ -135,7 +138,7 @@ uint8_t* generateRandomIPv6AddressHost() {
   }
   return address; // Return the generated address
 }
-void createRoutingTable(GlobalPacketData& globalPacketData) {
+void createRoutingTable(GlobalPacketData& globalPacketData, bool debug, int numPackets) {
   RoutingTableIPv4 routingTableIPv4;
   RoutingTableIPv6 routingTableIPv6;
   uint8_t subnetMask[16];
@@ -143,23 +146,23 @@ void createRoutingTable(GlobalPacketData& globalPacketData) {
   subnetMask[i] = 0xFF; // Set all bytes to 0xFF for the network portion
     }
   for (int i = 8; i < 16; ++i) {
-      subnetMask[i] = 0; // Set remaining bytes to 0 for the host portion
-}
-  //curandState_t state = randomState();
+      subnetMask[i] = 0;} // Set remaining bytes to 0 for the host portion
 
+  
   for (int i = 0; i < TABLE_SIZE; ++i) {
     // Populate IPv4 table
-    if (i < 2) {
+    if (i < numPackets) {
       routingTableIPv4.ipv4Entries[i].destinationAddress = globalPacketData.ipv4Packets[i].destinationAddress;
-      routingTableIPv4.ipv4Entries[i].subnetMask = 0xFFFFFFFF;
+      
     } else {
       routingTableIPv4.ipv4Entries[i].destinationAddress =  generateRandomIPv4AddressHost();
-      routingTableIPv4.ipv4Entries[i].subnetMask = 0xFFFFFFFF; // Example subnet mask
+      
     }
+    routingTableIPv4.ipv4Entries[i].subnetMask = 0xFFFFFFFF;
     routingTableIPv4.ipv4Entries[i].interface = i;
 
     // Populate IPv6 table
-    if (i < 2) {
+    if (i < numPackets) {
       memcpy(routingTableIPv6.ipv6Entries[i].destinationAddress,
        globalPacketData.ipv6Packets[i].destinationAddress, 16);
     } else {
@@ -168,12 +171,14 @@ void createRoutingTable(GlobalPacketData& globalPacketData) {
       delete[] address; // Free allocated memory
     }
     memcpy(routingTableIPv6.ipv6Entries[i].subnetMask, subnetMask, 16);
-routingTableIPv6.ipv6Entries[i].interface = i;
+    routingTableIPv6.ipv6Entries[i].interface = i;
   }
 
   // Shuffle entries
   shuffle(routingTableIPv4.ipv4Entries, TABLE_SIZE);
-
+  shuffleIPv6(routingTableIPv6.ipv6Entries, TABLE_SIZE);
+ 
+ if(debug){
   // Print routing tables
   printf("Routing Table (IPv4):\n");
   for (int i = 0; i < TABLE_SIZE; ++i) {
@@ -199,5 +204,5 @@ routingTableIPv6.ipv6Entries[i].interface = i;
       printf("%02x", routingTableIPv6.ipv6Entries[i].subnetMask[j]);
     }
     printf(", Interface: %u\n", routingTableIPv6.ipv6Entries[i].interface);
-  }}
+  }}}
 
