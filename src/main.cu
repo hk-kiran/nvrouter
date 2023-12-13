@@ -8,7 +8,7 @@ int main() {
   NextHops* nextHops;
 
   int numPackets = NUM_PACKETS;
-  bool debug = false;
+  bool debug = true;
 
 
   cudaMallocManaged(&globalPacketData, sizeof(GlobalPacketData));

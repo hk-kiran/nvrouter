@@ -1,4 +1,5 @@
 #include "lib/types.hpp"
+#include "lib/const.hpp"
 #include "utils.cu"
 #include <curand_kernel.h>
 
@@ -57,19 +58,6 @@ void generateIPv4PacketsKernel(int numPackets, bool debug,GlobalPacketData& glob
     delete[] h_packets;
 }
 
-void shuffleIPv6(RoutingEntryIPV6 entries[], int n) {
-  for (int i = n - 1; i > 0; --i) {
-    int j = rand() % (i + 1);
-    std::swap(entries[i], entries[j]);
-  }
-}
-
-void shuffle(RoutingEntryIPV4 entries[], int n) {
-  for (int i = n - 1; i > 0; --i) {
-    int j = rand() % (i + 1);
-    std::swap(entries[i], entries[j]);
-  }
-}
 void generateIPv6PacketsKernel(int numPackets, bool debug, GlobalPacketData& globalPacketData) {
     int blockSize = 256; // Number of threads per block
     int numBlocks = (numPackets + blockSize - 1) / blockSize; // Calculate the number of blocks
@@ -156,15 +144,16 @@ void createRoutingTable(GlobalPacketData& globalPacketData, bool debug, int numP
       subnetMask[i] = 0;} // Set remaining bytes to 0 for the host portion
 
   
-  for (int i = 0; i < TABLE_SIZE; ++i) {
+  for (int i = 0; i < TABLE_SIZE-len_address_pool; i++) {
     // Populate IPv4 table
     if (i < numPackets) {
       routingTableIPv4.ipv4Entries[i].destinationAddress = globalPacketData.ipv4Packets[i].destinationAddress;
       
-    } else {
+    } 
+    else {
       routingTableIPv4.ipv4Entries[i].destinationAddress =  generateRandomIPv4AddressHost();
-      
     }
+    
     routingTableIPv4.ipv4Entries[i].subnetMask = 0xFFFFFFFF;
     routingTableIPv4.ipv4Entries[i].interface = i;
 
@@ -181,11 +170,15 @@ void createRoutingTable(GlobalPacketData& globalPacketData, bool debug, int numP
     routingTableIPv6.ipv6Entries[i].interface = i;
   }
 
-  // Shuffle entries
-  shuffle(routingTableIPv4.ipv4Entries, TABLE_SIZE);
-  shuffleIPv6(routingTableIPv6.ipv6Entries, TABLE_SIZE);
+  for (int i = TABLE_SIZE - len_address_pool; i < TABLE_SIZE; i++) {
+
+    routingTableIPv4.ipv4Entries[i].subnetMask = 0xFF000000;
+    routingTableIPv4.ipv4Entries[i].interface = i;
+    routingTableIPv4.ipv4Entries[i].destinationAddress = (address_pool[i - (TABLE_SIZE - len_address_pool)] << 24);
+
+  }
  
- if(debug){
+  if(debug){
   // Print routing tables
   printf("Routing Table (IPv4):\n");
   for (int i = 0; i < TABLE_SIZE; ++i) {

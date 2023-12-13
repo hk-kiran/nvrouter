@@ -8,6 +8,7 @@ BIN_DIR := bin
 
 # Source files
 SRCS := $(wildcard $(SRC_DIR)/*.cu)
+LIBS := $(wildcard $(SRC_DIR)/lib/*.hpp)
 
 # Target executable
 TARGET := $(BIN_DIR)/nvrouter
@@ -19,7 +20,7 @@ run: all
 all: $(TARGET)
 
 # Rule to compile and link the target executable
-$(TARGET): $(SRCS)
+$(TARGET): $(SRCS) $(LIBS)
 	@mkdir -p $(BIN_DIR)
 	$(NVCC) $(CFLAGS) $(SRC_DIR)/main.cu -o $@
 

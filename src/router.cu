@@ -20,7 +20,7 @@ __global__ void ipv4packetProcessingKernel(int numPackets, GlobalPacketData* glo
             sharedRoutingTableIPv4[i].destinationAddress) {
                 // Next hop is the interface for this entry
                 nextHops->hops[index] = sharedRoutingTableIPv4[i].interface;
-
+                break;
             }
         }
     }

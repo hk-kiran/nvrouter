@@ -1,5 +1,6 @@
 #include <curand_kernel.h>
 #include "lib/types.hpp"
+#include "lib/const.hpp"
 
 __device__ int deviceStrlen(const char* str) {
     int len = 0;
@@ -10,7 +11,7 @@ __device__ int deviceStrlen(const char* str) {
 }
 
 // Function to build an IPv4 packet with payload
-__device__ IPv4Packet buildIPv4PacketWithPayload(uint32_t sourceAddress, uint32_t destinationAddress) {
+__device__ IPv4Packet buildIPv4PacketWithPayload(uint32_t* sourceAddress, uint32_t* destinationAddress) {
     IPv4Packet packet;
     
     // Set some dummy values of the packet fields
@@ -23,8 +24,8 @@ __device__ IPv4Packet buildIPv4PacketWithPayload(uint32_t sourceAddress, uint32_
     packet.timeToLive = 64;
     packet.protocol = 6; // TCP
     packet.headerChecksum = 0;
-    packet.sourceAddress = sourceAddress;
-    packet.destinationAddress = destinationAddress;
+    packet.sourceAddress = *sourceAddress;
+    packet.destinationAddress = *destinationAddress;
     
     // Set the payload data
     const char* payloadData = "Dummy IPv4 payload data";
@@ -36,12 +37,15 @@ __device__ IPv4Packet buildIPv4PacketWithPayload(uint32_t sourceAddress, uint32_
 // Kernel function to generate IPv4 packets
 __device__ uint32_t randomizeAddress(curandState_t* state) {
     uint32_t address = 0;
-    for (int i = 0; i < 4; i++) {
-        address |= (curand(state) % 256) << (i * 8); 
+    const int address_pool[] = {127, 198, 10, 20, 240, 11, 160, 172, 240, 224};
+    const int len_address_pool = 10;
+    address |= address_pool[(curand(state) % len_address_pool)] << 24;
+    for (int i = 0; i < 3; i++)
+    {
+        address |= (curand(state) % 256) << (i * 8);
     }
     return address;
 }
-
 
 
 __global__ void generateIPv4Packets(IPv4Packet* packets, int numPackets) {
@@ -54,7 +58,7 @@ __global__ void generateIPv4Packets(IPv4Packet* packets, int numPackets) {
         uint32_t sourceAddress = randomizeAddress(&state); // Generate random source address
         uint32_t destinationAddress = randomizeAddress(&state); // Generate random destination address
         
-        packets[idx] = buildIPv4PacketWithPayload(sourceAddress, destinationAddress);
+        packets[idx] = buildIPv4PacketWithPayload(&sourceAddress, &destinationAddress);
     }
 }
 
