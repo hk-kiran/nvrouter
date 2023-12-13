@@ -3,7 +3,6 @@
 #include <curand_kernel.h>
 
 
-
 void generateIPv4PacketsKernel(int numPackets, bool debug,GlobalPacketData& globalPacketData) {
     
     int blockSize = 256; // Number of threads per block
@@ -21,6 +20,11 @@ void generateIPv4PacketsKernel(int numPackets, bool debug,GlobalPacketData& glob
     generateIPv4Packets<<<numBlocks, blockSize>>>(d_packets, numPackets);
     cudaEventRecord(stop);
 
+    cudaError_t error = cudaGetLastError();
+    if (error != cudaSuccess) {
+        printf("Kernel failed: %s\n", cudaGetErrorString(error));
+    }
+
     cudaEventSynchronize(stop);
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
@@ -29,7 +33,6 @@ void generateIPv4PacketsKernel(int numPackets, bool debug,GlobalPacketData& glob
     printf("Time elapsed to generate %d IPv4 packets : %f milliseconds\n", numPackets, milliseconds);
     // Copy the packets back to the host
     IPv4Packet* h_packets = new IPv4Packet[numPackets];
-    globalPacketData.ipv4Packets = new IPv4Packet[numPackets];
     cudaMemcpy(h_packets, d_packets, numPackets * sizeof(IPv4Packet), cudaMemcpyDeviceToHost);
     for (int i = 0; i < numPackets; i++) {
       globalPacketData.ipv4Packets[i] = h_packets[i];
@@ -83,6 +86,11 @@ void generateIPv6PacketsKernel(int numPackets, bool debug, GlobalPacketData& glo
     generateIPv6Packets<<<numBlocks, blockSize>>>(d_ipv6Packets, numPackets);
     cudaEventRecord(stop);
 
+    cudaError_t error = cudaGetLastError();
+    if (error != cudaSuccess) {
+        printf("Kernel failed: %s\n", cudaGetErrorString(error));
+    }
+    
     cudaEventSynchronize(stop);
     float milliseconds = 0;
     cudaEventElapsedTime(&milliseconds, start, stop);
@@ -92,7 +100,6 @@ void generateIPv6PacketsKernel(int numPackets, bool debug, GlobalPacketData& glo
     
     // Copy the IPv6 packets back to the host
     IPv6Packet* h_ipv6Packets = new IPv6Packet[numPackets];
-    globalPacketData.ipv6Packets = new IPv6Packet[numPackets];
     cudaMemcpy(h_ipv6Packets, d_ipv6Packets, numPackets * sizeof(IPv6Packet), cudaMemcpyDeviceToHost);
     for (int i = 0; i < numPackets; i++) {
       globalPacketData.ipv6Packets[i] = h_ipv6Packets[i];

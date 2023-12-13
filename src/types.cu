@@ -1,29 +1,29 @@
 // file for data types
 #include <cstdint>
 #include <stdio.h>
+#include "const.cu"
 
 #ifndef ROUTINGENTRYIPV4
 #define ROUTINGENTRYIPV4
 struct RoutingEntryIPV4 {
     uint32_t destinationAddress;
     uint32_t subnetMask;
-    uint32_t interface;
+    uint8_t interface; 
 };
 #endif
 
 #ifndef ROUTINGENTRYIPV6
 #define ROUTINGENTRYIPV6
 struct RoutingEntryIPV6 {
-  uint8_t destinationAddress[16]; // IPv6 address
-  uint8_t subnetMask[16]; // IPv6 subnet mask
-  int interface; // Interface number
+  uint8_t destinationAddress[16]; 
+  uint8_t subnetMask[16]; 
+  int interface; 
 };
 #endif
 
 
 #ifndef ROUTINGTABLEIPV4
 #define ROUTINGTABLEIPV4
-const int TABLE_SIZE = 10;
 struct RoutingTableIPv4 {
   RoutingEntryIPV4 ipv4Entries[TABLE_SIZE];
 };
@@ -32,10 +32,16 @@ struct RoutingTableIPv4 {
 #ifndef ROUTINGTABLEIPV6
 #define ROUTINGTABLEIPV6
 struct RoutingTableIPv6 {
-  RoutingEntryIPV6 ipv6Entries[TABLE_SIZE]; // Store 16 bytes for each IPv6 address
+  RoutingEntryIPV6 ipv6Entries[TABLE_SIZE]; 
 };
 #endif
 
+#ifndef NEXTHOPS_H
+#define NEXTHOPS_H
+struct NextHops {
+  uint8_t hops[NUM_PACKETS]; 
+};
+#endif
 
 
 #ifndef IPV4_PACKET_H
@@ -77,7 +83,7 @@ struct IPv6Packet {
 #ifndef GLOBALPACKETDATA
 #define GLOBALPACKETDATA
 struct GlobalPacketData {
-    IPv4Packet* ipv4Packets;
-    IPv6Packet* ipv6Packets;
+    IPv4Packet ipv4Packets[NUM_PACKETS];
+    IPv6Packet ipv6Packets[NUM_PACKETS];
 };
-#endif// IPV6_PACKET_H
+#endif

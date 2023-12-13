@@ -12,6 +12,9 @@ SRCS := $(wildcard $(SRC_DIR)/*.cu)
 # Target executable
 TARGET := $(BIN_DIR)/nvrouter
 
+run: all
+	$(BIN_DIR)/nvrouter
+	
 # Default target
 all: $(TARGET)
 
