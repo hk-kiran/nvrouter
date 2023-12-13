@@ -1,4 +1,4 @@
-#include "types.cu"
+#include "lib/types.hpp"
 #include "utils.cu"
 #include <curand_kernel.h>
 

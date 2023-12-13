@@ -1,5 +1,5 @@
 #include <curand_kernel.h>
-#include "types.cu"
+#include "lib/types.hpp"
 
 __device__ int deviceStrlen(const char* str) {
     int len = 0;

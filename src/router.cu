@@ -1,5 +1,5 @@
 #include "kernel.cu"
-#include "types.cu"
+#include "lib/types.hpp"
 
 __global__ void ipv4packetProcessingKernel(int numPackets, GlobalPacketData* globalPacketData, RoutingTableIPv4* routingTableIPv4,
     NextHops* nextHops) {

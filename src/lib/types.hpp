@@ -1,7 +1,7 @@
 // file for data types
 #include <cstdint>
 #include <stdio.h>
-#include "const.cu"
+#include "const.hpp"
 
 #ifndef ROUTINGENTRYIPV4
 #define ROUTINGENTRYIPV4
