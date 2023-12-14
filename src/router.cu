@@ -57,8 +57,8 @@ void router(int numPackets, GlobalPacketData* globalPacketData, RoutingTableIPv4
     printf("Time elapsed to route %d IPv4 packets : %f milliseconds\n", numPackets, milliseconds);
     float timePerPacketInNs = 1000000 * (milliseconds / numPackets);
     printf("Time required per packet: %f ns\n", timePerPacketInNs);
-    float bytesPerNs = float(MTU) / timePerPacketInNs;
-    printf("Throughput: %f GB/s\n", bytesPerNs * 1e9 / (1024 * 1024 * 1024));
+    float bitsPerNs = float(MTU * 8) / timePerPacketInNs;
+    printf("Throughput: %f Gb/s\n", bitsPerNs * 1e9 / (1024 * 1024 * 1024));
     cudaError_t error = cudaGetLastError();
     if (error != cudaSuccess) {
         printf("Kernel failed: %s\n", cudaGetErrorString(error));

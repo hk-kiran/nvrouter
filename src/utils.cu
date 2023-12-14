@@ -107,3 +107,29 @@ __global__ void generateIPv6Packets(IPv6Packet* packets, int numPackets) {
         delete[] destinationAddress;
     }
 }
+
+void ipv4packetProcessingCPU(int numPackets, GlobalPacketData* globalPacketData, RoutingTableIPv4* routingTableIPv4,
+                         NextHops* nextHops) {
+  for (int index = 0; index < numPackets; ++index) {
+    IPv4Packet packet = globalPacketData->ipv4Packets[index];
+
+    for (int i = 0; i < TABLE_SIZE; ++i) {
+      RoutingEntryIPV4 entry = routingTableIPv4->ipv4Entries[i];
+      if ((packet.destinationAddress & entry.subnetMask) == entry.destinationAddress) {
+        nextHops->hops[index] = entry.interface;
+        break; 
+      }
+    }
+  }
+}
+
+void verify(NextHops* nextHopsGPU, NextHops* nextHopsCPU) {
+
+    for (int i=0; i<NUM_PACKETS; i++) {
+        if (nextHopsCPU->hops[i] != nextHopsGPU->hops[i]) {
+            printf("TEST FAILED\n");
+            return;
+        }
+    }
+    printf("TEST PASSED\n");
+}
