@@ -14,7 +14,7 @@ LIBS := $(wildcard $(SRC_DIR)/lib/*.hpp)
 TARGET := $(BIN_DIR)/nvrouter
 
 run: all
-	$(BIN_DIR)/nvrouter
+	CUDA_VISIBLE_DEVICES=1 $(BIN_DIR)/nvrouter
 	
 # Default target
 all: $(TARGET)

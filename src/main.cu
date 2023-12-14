@@ -8,7 +8,7 @@ int main() {
   NextHops* nextHops;
 
   int numPackets = NUM_PACKETS;
-  bool debug = true;
+  bool debug = false;
 
 
   cudaMallocManaged(&globalPacketData, sizeof(GlobalPacketData));
@@ -21,8 +21,8 @@ int main() {
   createRoutingTable(*globalPacketData, debug, numPackets, *routingTableIPv4,  *routingTableIPv6);
   router(numPackets, globalPacketData, routingTableIPv4, routingTableIPv6, nextHops);
 
-  for (int i = 0; i < numPackets; i++) {
-    printf("Next Hop for Packet %d: %d\n", i, nextHops->hops[i]);
-  }
+  // for (int i = 0; i < numPackets; i++) {
+  //   printf("Next Hop for Packet %d: %d\n", i, nextHops->hops[i]);
+  // }
   return 0;
 }

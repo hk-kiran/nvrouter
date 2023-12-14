@@ -59,7 +59,7 @@ struct IPv4Packet {
     uint16_t headerChecksum;
     uint32_t sourceAddress;
     uint32_t destinationAddress;
-    uint8_t payload[1500]; // Maximum payload size of 1500 bytes
+    uint8_t payload[MTU]; // Maximum payload size of 1500 bytes
 };
 
 #endif // IPV4_PACKET_H
@@ -76,7 +76,7 @@ struct IPv6Packet {
     uint8_t hopLimit;
     uint16_t sourceAddress[8];
     uint16_t destinationAddress[8];
-    uint8_t payload[1500]; // Maximum payload size of 1500 bytes
+    uint8_t payload[MTU]; // Maximum payload size of 1500 bytes
 };
 
 #endif 
