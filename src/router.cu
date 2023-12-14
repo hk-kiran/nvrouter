@@ -1,8 +1,22 @@
 #include "kernel.cu"
 #include "lib/types.hpp"
 
-__global__ void ipv4packetProcessingKernel(int numPackets, GlobalPacketData* globalPacketData, RoutingTableIPv4* routingTableIPv4,
-    NextHops* nextHops) {
+__global__ void blocklistedIPsKernel(int numPackets, int numBlockListedIPs, GlobalPacketData* globalPacketData,
+    uint32_t* blocklistedIPs, NextHops* nextHops) {
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    if (index < numPackets) {
+        IPv4Packet packet = globalPacketData->ipv4Packets[index];
+        for (int i = 0; i < numBlockListedIPs; i ++) {
+            if (packet.destinationAddress == blocklistedIPs[i]) {
+                nextHops->hops[index] = 255;
+                break;
+            }
+        }
+    }
+}
+
+__global__ void ipv4packetProcessingKernel(int numPackets, GlobalPacketData* globalPacketData,
+     RoutingTableIPv4* routingTableIPv4, NextHops* nextHops) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     // get routing table in shared memory
     extern __shared__ RoutingEntryIPV4 sharedRoutingTableIPv4[];
@@ -33,8 +47,8 @@ __global__ void ipv4packetProcessingKernel(int numPackets, GlobalPacketData* glo
     }
 }
 
-void router(int numPackets, GlobalPacketData* globalPacketData, RoutingTableIPv4* routingTableIPv4, RoutingTableIPv6* routingTableIPv6,
-    NextHops* nextHops) {
+void router(int numPackets, int numBlockListedIPs, GlobalPacketData* globalPacketData, RoutingTableIPv4* routingTableIPv4, RoutingTableIPv6* routingTableIPv6,
+    uint32_t* blocklistedIPs, NextHops* nextHops) {
 
     int shared_mem_size = sizeof(routingTableIPv4);
     
@@ -49,6 +63,7 @@ void router(int numPackets, GlobalPacketData* globalPacketData, RoutingTableIPv4
 
     cudaEventRecord(start);
     ipv4packetProcessingKernel<<<gridDim, blockDim, shared_mem_size>>>(numPackets, globalPacketData, routingTableIPv4, nextHops);
+    blocklistedIPsKernel<<<gridDim, blockDim>>>(numPackets, numBlockListedIPs, globalPacketData, blocklistedIPs, nextHops);
     cudaEventRecord(stop);
 
     cudaEventSynchronize(stop);

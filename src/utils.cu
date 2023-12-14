@@ -108,8 +108,8 @@ __global__ void generateIPv6Packets(IPv6Packet* packets, int numPackets) {
     }
 }
 
-void ipv4packetProcessingCPU(int numPackets, GlobalPacketData* globalPacketData, RoutingTableIPv4* routingTableIPv4,
-                         NextHops* nextHops) {
+void ipv4packetProcessingCPU(int numPackets, int numBlockListedIPs, GlobalPacketData* globalPacketData, RoutingTableIPv4* routingTableIPv4,
+                         uint32_t* blocklistedIPs, NextHops* nextHops) {
   for (int index = 0; index < numPackets; ++index) {
     IPv4Packet packet = globalPacketData->ipv4Packets[index];
 
@@ -120,14 +120,23 @@ void ipv4packetProcessingCPU(int numPackets, GlobalPacketData* globalPacketData,
         break; 
       }
     }
+
+    for (int i = 0; i < numBlockListedIPs; i++) {
+        if (blocklistedIPs[i] == packet.destinationAddress) {
+            nextHops->hops[index] = 255;
+            break;
+        }
+    }
   }
 }
 
 void verify(NextHops* nextHopsGPU, NextHops* nextHopsCPU) {
 
     for (int i=0; i<NUM_PACKETS; i++) {
-        if (nextHopsCPU->hops[i] != nextHopsGPU->hops[i]) {
-            printf("TEST FAILED\n");
+        // printf("%u,, %u\n", nextHopsCPU->hops[i], nextHopsGPU->hops[i]);
+        if (nextHopsCPU->hops[i] != nextHopsGPU->hops[i])
+        {
+            printf("%d TEST FAILED\n", i);
             return;
         }
     }
