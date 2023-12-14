@@ -1,7 +1,7 @@
 #include "kernel.cu"
 #include "lib/types.hpp"
 
-__global__ void blocklistedIPsKernel(int numPackets, int numBlockListedIPs, GlobalPacketData* globalPacketData,
+__global__ void firewallKernel(int numPackets, int numBlockListedIPs, GlobalPacketData* globalPacketData,
     uint32_t* blocklistedIPs, NextHops* nextHops) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     if (index < numPackets) {
@@ -63,7 +63,7 @@ void router(int numPackets, int numBlockListedIPs, GlobalPacketData* globalPacke
 
     cudaEventRecord(start);
     ipv4packetProcessingKernel<<<gridDim, blockDim, shared_mem_size>>>(numPackets, globalPacketData, routingTableIPv4, nextHops);
-    blocklistedIPsKernel<<<gridDim, blockDim>>>(numPackets, numBlockListedIPs, globalPacketData, blocklistedIPs, nextHops);
+    firewallKernel<<<gridDim, blockDim>>>(numPackets, numBlockListedIPs, globalPacketData, blocklistedIPs, nextHops);
     cudaEventRecord(stop);
 
     cudaEventSynchronize(stop);
